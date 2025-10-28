@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, type ComponentType, type SVGProps } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { getVehicle } from '@/utils/vehicles';
 import Link from 'next/link';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -20,26 +21,58 @@ import {
 } from 'lucide-react';
 import VehicleCard from '@/components/VehicleCard';
 
+// Add types
+interface Vehicle {
+  id: string;
+  images?: string[];
+  thumbnail?: string;
+  price: number;
+  make: string;
+  model: string;
+  year?: number | string;
+  mileage?: number;
+  fuelType?: string;
+  transmission?: string;
+  drivetrain?: string;
+  exteriorColor?: string;
+  engine?: string;
+  cityMpg?: number;
+  hwyMpg?: number;
+  features?: string[];
+  trim?: string;
+  isNew?: boolean;
+  isCertified?: boolean;
+  msrp?: number;
+}
+
+interface Spec {
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  label: string;
+  value: string | number;
+}
+
 export default function VehicleDetails() {
   const urlParams = new URLSearchParams(window.location.search);
-  const vehicleId = urlParams.get('id');
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const vehicleId: string | null = urlParams.get('id');
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
 
-  const { data: vehicle, isLoading } = useQuery({
+  const { data: vehicle, isLoading } = useQuery<Vehicle | undefined, unknown>({
     queryKey: ['vehicle', vehicleId],
     queryFn: async () => {
-      const vehicles = await base44.entities.Vehicle.list();
-      return vehicles.find((v) => v.id === vehicleId);
+      const vehicles = await getVehicle.entities.Vehicle.list();
+      return vehicles.find((v: { id: string | null }) => v.id === vehicleId);
     },
     enabled: !!vehicleId,
   });
 
-  const { data: similarVehicles = [] } = useQuery({
+  const { data: similarVehicles = [] } = useQuery<Vehicle[], unknown>({
     queryKey: ['similar-vehicles', vehicle?.make],
     queryFn: async () => {
       if (!vehicle) return [];
-      const all = await base44.entities.Vehicle.filter({ make: vehicle.make });
-      return all.filter((v) => v.id !== vehicle.id).slice(0, 3);
+      const all = await getVehicle.entities.Vehicle.filter({
+        make: vehicle.make,
+      });
+      return all.filter((v: { id: any }) => v.id !== vehicle.id).slice(0, 3);
     },
     enabled: !!vehicle,
   });
@@ -96,7 +129,7 @@ export default function VehicleDetails() {
     );
   }
 
-  const images =
+  const images: string[] =
     vehicle.images?.length > 0
       ? vehicle.images
       : [
@@ -110,12 +143,14 @@ export default function VehicleDetails() {
     minimumFractionDigits: 0,
   }).format(vehicle.price);
 
-  const specs = [
-    { icon: Calendar, label: 'Year', value: vehicle.year },
+  const specs: Spec[] = [
+    { icon: Calendar, label: 'Year', value: vehicle.year ?? '' },
     {
       icon: Gauge,
       label: 'Mileage',
-      value: `${new Intl.NumberFormat('en-US').format(vehicle.mileage)} mi`,
+      value: `${new Intl.NumberFormat('en-US').format(
+        vehicle.mileage ?? 0
+      )} mi`,
     },
     { icon: Fuel, label: 'Fuel Type', value: vehicle.fuelType || 'Gasoline' },
     {
@@ -424,7 +459,7 @@ export default function VehicleDetails() {
                   data-dynamic-content='true'
                   className='grid grid-cols-1 md:grid-cols-2 gap-3'
                 >
-                  {vehicle.features.map((feature, index) => (
+                  {vehicle.features.map((feature: string, index: number) => (
                     <div
                       data-source-location='pages/VehicleDetails:208:20'
                       data-dynamic-content='true'
@@ -496,18 +531,11 @@ export default function VehicleDetails() {
                   className='flex gap-2 mb-6'
                 >
                   {vehicle.isNew && (
-                    <Badge
-                      data-source-location='pages/VehicleDetails:234:20'
-                      data-dynamic-content='false'
-                      className='bg-green-600 text-white'
-                    >
-                      New
-                    </Badge>
+                    <Badge className='bg-green-600 text-white'>New</Badge>
                   )}
                   {vehicle.isCertified && (
                     <Badge
-                      data-source-location='pages/VehicleDetails:237:20'
-                      data-dynamic-content='false'
+                      className='bg-blue-600 text-white'
                       className='bg-blue-600 text-white flex items-center gap-1'
                     >
                       <Award
@@ -687,7 +715,7 @@ export default function VehicleDetails() {
               data-dynamic-content='true'
               className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
             >
-              {similarVehicles.map((v, index) => (
+              {similarVehicles.map((v: unknown, index: number | undefined) => (
                 <VehicleCard
                   data-source-location='pages/VehicleDetails:299:16'
                   data-dynamic-content='false'
