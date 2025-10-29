@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import type { FilterState } from '@/utils/filters';
 
 const makes = [
   'Audi',
@@ -43,24 +44,6 @@ const fuelTypes = [
 ];
 const transmissions = ['Automatic', 'Manual', 'CVT', 'DCT'];
 const drivetrains = ['FWD', 'RWD', 'AWD', '4WD'];
-
-export type FilterState = {
-  make: string;
-  model: string;
-  minYear: string;
-  maxYear: string;
-  minPrice: string;
-  maxPrice: string;
-  minMileage: string;
-  maxMileage: string;
-  bodyType: string;
-  fuelType: string;
-  transmission: string;
-  drivetrain: string;
-  isNew: string;
-  isCertified: string;
-  inStock: string;
-};
 
 interface Props {
   filters: FilterState;

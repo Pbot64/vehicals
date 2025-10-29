@@ -4,40 +4,12 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { filterVehicles, type Vehicle } from '@/utils/vehicles';
-
-type FilterState = {
-  make: string;
-  model: string;
-  minYear: string;
-  maxYear: string;
-  minPrice: string;
-  maxPrice: string;
-  minMileage: string;
-  maxMileage: string;
-  bodyType: string;
-  fuelType: string;
-  transmission: string;
-  drivetrain: string;
-  isNew: string;
-  isCertified: string;
-  inStock: string;
-};
-
-type VehicleQuery = {
-  make?: string;
-  model?: string;
-  year?: { $gte?: number; $lte?: number };
-  price?: { $gte?: number; $lte?: number };
-  mileage?: { $gte?: number; $lte?: number };
-  bodyType?: string;
-  fuelType?: string;
-  transmission?: string;
-  drivetrain?: string;
-  isNew?: boolean;
-  isCertified?: boolean;
-  inStock?: boolean;
-};
+import {
+  filterVehicles,
+  type Vehicle,
+  type VehicleQuery,
+} from '@/utils/vehicles';
+import type { FilterState } from '@/utils/filters';
 
 export default function Inventory() {
   const router = useRouter();
