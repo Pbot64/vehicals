@@ -127,40 +127,16 @@ export default function Gallery() {
   };
 
   return (
-    <div
-      data-source-location='pages/Gallery:56:4'
-      data-dynamic-content='true'
-      className='min-h-screen bg-neutral-50'
-    >
+    <div className='min-h-screen bg-neutral-50'>
       {/* Hero */}
-      <div
-        data-source-location='pages/Gallery:58:6'
-        data-dynamic-content='true'
-        className='bg-gradient-to-br from-slate-900 to-blue-900 text-white py-20'
-      >
-        <div
-          data-source-location='pages/Gallery:59:8'
-          data-dynamic-content='true'
-          className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'
-        >
+      <div className='bg-linear-to-br from-slate-900 to-blue-900 text-white py-20'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
           <motion.div
-            data-source-location='pages/Gallery:60:10'
-            data-dynamic-content='false'
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1
-              data-source-location='pages/Gallery:64:12'
-              data-dynamic-content='false'
-              className='text-4xl md:text-5xl font-bold mb-4'
-            >
-              Gallery
-            </h1>
-            <p
-              data-source-location='pages/Gallery:65:12'
-              data-dynamic-content='false'
-              className='text-xl text-slate-300 max-w-2xl mx-auto'
-            >
+            <h1 className='text-4xl md:text-5xl font-bold mb-4'>Gallery</h1>
+            <p className='text-xl text-slate-300 max-w-2xl mx-auto'>
               Explore our showroom, customer deliveries, and body shop
               transformations
             </p>
@@ -168,21 +144,11 @@ export default function Gallery() {
         </div>
       </div>
 
-      <div
-        data-source-location='pages/Gallery:72:6'
-        data-dynamic-content='true'
-        className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12'
-      >
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12'>
         {/* Category Filter */}
-        <div
-          data-source-location='pages/Gallery:74:8'
-          data-dynamic-content='true'
-          className='flex flex-wrap gap-3 justify-center mb-12'
-        >
+        <div className='flex flex-wrap gap-3 justify-center mb-12'>
           {categories.map((category) => (
             <Button
-              data-source-location='pages/Gallery:76:12'
-              data-dynamic-content='true'
               key={category.id}
               variant={activeCategory === category.id ? 'default' : 'outline'}
               onClick={() => setActiveCategory(category.id)}
@@ -198,20 +164,10 @@ export default function Gallery() {
         </div>
 
         {/* Masonry Grid */}
-        <div
-          data-source-location='pages/Gallery:88:8'
-          data-dynamic-content='true'
-          className='columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4'
-        >
-          <AnimatePresence
-            data-source-location='pages/Gallery:89:10'
-            data-dynamic-content='true'
-            mode='popLayout'
-          >
+        <div className='columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4'>
+          <AnimatePresence mode='popLayout'>
             {filteredImages.map((image, index) => (
               <motion.div
-                data-source-location='pages/Gallery:91:14'
-                data-dynamic-content='true'
                 key={image.id}
                 layout
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -221,32 +177,16 @@ export default function Gallery() {
                 className='break-inside-avoid group cursor-pointer'
                 onClick={() => openLightbox(image, index)}
               >
-                <div
-                  data-source-location='pages/Gallery:101:16'
-                  data-dynamic-content='true'
-                  className='relative bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300'
-                >
+                <div className='relative bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300'>
                   <img
-                    data-source-location='pages/Gallery:102:18'
-                    data-dynamic-content='false'
                     src={image.url}
                     alt={image.title}
                     className='w-full h-auto group-hover:scale-105 transition-transform duration-300'
                     loading='lazy'
                   />
 
-                  <div
-                    data-source-location='pages/Gallery:108:18'
-                    data-dynamic-content='true'
-                    className='absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end'
-                  >
-                    <p
-                      data-source-location='pages/Gallery:109:20'
-                      data-dynamic-content='true'
-                      className='text-white font-medium p-4'
-                    >
-                      {image.title}
-                    </p>
+                  <div className='absolute inset-0 bg-linear-to-t from-slate-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end'>
+                    <p className='text-white font-medium p-4'>{image.title}</p>
                   </div>
                 </div>
               </motion.div>
@@ -255,16 +195,8 @@ export default function Gallery() {
         </div>
 
         {filteredImages.length === 0 && (
-          <div
-            data-source-location='pages/Gallery:118:10'
-            data-dynamic-content='false'
-            className='text-center py-20'
-          >
-            <p
-              data-source-location='pages/Gallery:119:12'
-              data-dynamic-content='false'
-              className='text-2xl text-slate-600'
-            >
+          <div className='text-center py-20'>
+            <p className='text-2xl text-slate-600'>
               No images in this category yet
             </p>
           </div>
@@ -272,14 +204,9 @@ export default function Gallery() {
       </div>
 
       {/* Lightbox */}
-      <AnimatePresence
-        data-source-location='pages/Gallery:125:6'
-        data-dynamic-content='true'
-      >
+      <AnimatePresence>
         {lightboxImage && (
           <motion.div
-            data-source-location='pages/Gallery:127:10'
-            data-dynamic-content='true'
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -287,53 +214,33 @@ export default function Gallery() {
             onClick={closeLightbox}
           >
             <button
-              data-source-location='pages/Gallery:134:12'
-              data-dynamic-content='false'
               onClick={closeLightbox}
               className='absolute top-4 right-4 p-2 bg-white/10 backdrop-blur rounded-full text-white hover:bg-white/20 transition-colors z-10'
             >
-              <X
-                data-source-location='pages/Gallery:138:14'
-                data-dynamic-content='false'
-                className='w-6 h-6'
-              />
+              <X className='w-6 h-6' />
             </button>
 
             <button
-              data-source-location='pages/Gallery:141:12'
-              data-dynamic-content='false'
               onClick={(e) => {
                 e.stopPropagation();
                 navigateLightbox('prev');
               }}
               className='absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur rounded-full text-white hover:bg-white/20 transition-colors'
             >
-              <ChevronLeft
-                data-source-location='pages/Gallery:148:14'
-                data-dynamic-content='false'
-                className='w-6 h-6'
-              />
+              <ChevronLeft className='w-6 h-6' />
             </button>
 
             <button
-              data-source-location='pages/Gallery:151:12'
-              data-dynamic-content='false'
               onClick={(e) => {
                 e.stopPropagation();
                 navigateLightbox('next');
               }}
               className='absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur rounded-full text-white hover:bg-white/20 transition-colors'
             >
-              <ChevronRight
-                data-source-location='pages/Gallery:158:14'
-                data-dynamic-content='false'
-                className='w-6 h-6'
-              />
+              <ChevronRight className='w-6 h-6' />
             </button>
 
             <motion.div
-              data-source-location='pages/Gallery:161:12'
-              data-dynamic-content='true'
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -341,30 +248,16 @@ export default function Gallery() {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                data-source-location='pages/Gallery:168:14'
-                data-dynamic-content='false'
                 src={lightboxImage.url}
                 alt={lightboxImage.title}
                 className='w-full h-auto rounded-lg shadow-2xl'
               />
 
-              <div
-                data-source-location='pages/Gallery:173:14'
-                data-dynamic-content='true'
-                className='text-center mt-4'
-              >
-                <p
-                  data-source-location='pages/Gallery:174:16'
-                  data-dynamic-content='true'
-                  className='text-white text-xl font-medium'
-                >
+              <div className='text-center mt-4'>
+                <p className='text-white text-xl font-medium'>
                   {lightboxImage.title}
                 </p>
-                <p
-                  data-source-location='pages/Gallery:175:16'
-                  data-dynamic-content='true'
-                  className='text-slate-400 text-sm mt-1'
-                >
+                <p className='text-slate-400 text-sm mt-1'>
                   {lightboxIndex + 1} / {filteredImages.length}
                 </p>
               </div>
