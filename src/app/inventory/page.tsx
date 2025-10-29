@@ -1,76 +1,78 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { SlidersHorizontal, X } from 'lucide-react';
-import VehicleCard from '@/components/VehicleCard';
-import FilterPanel from '@/components/FilterPanel';
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { filterVehicles, type Vehicle } from '@/utils/vehicles';
+
+type FilterState = {
+  make: string;
+  model: string;
+  minYear: string;
+  maxYear: string;
+  minPrice: string;
+  maxPrice: string;
+  minMileage: string;
+  maxMileage: string;
+  bodyType: string;
+  fuelType: string;
+  transmission: string;
+  drivetrain: string;
+  isNew: string;
+  isCertified: string;
+  inStock: string;
+};
+
+type VehicleQuery = {
+  make?: string;
+  model?: string;
+  year?: { $gte?: number; $lte?: number };
+  price?: { $gte?: number; $lte?: number };
+  mileage?: { $gte?: number; $lte?: number };
+  bodyType?: string;
+  fuelType?: string;
+  transmission?: string;
+  drivetrain?: string;
+  isNew?: boolean;
+  isCertified?: boolean;
+  inStock?: boolean;
+};
 
 export default function Inventory() {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState('-created_date');
+  const [sortBy, setSortBy] = useState<string>('-created_date');
 
-  // Parse URL params
-  const urlParams = new URLSearchParams(location.search);
-  const [filters, setFilters] = useState({
-    make: urlParams.get('make') || '',
-    model: urlParams.get('model') || '',
-    minYear: urlParams.get('minYear') || '',
-    maxYear: urlParams.get('maxYear') || '',
-    minPrice: urlParams.get('minPrice') || '',
-    maxPrice: urlParams.get('maxPrice') || '',
-    minMileage: urlParams.get('minMileage') || '',
-    maxMileage: urlParams.get('maxMileage') || '',
-    bodyType: urlParams.get('bodyType') || '',
-    fuelType: urlParams.get('fuelType') || '',
-    transmission: urlParams.get('transmission') || '',
-    drivetrain: urlParams.get('drivetrain') || '',
-    isNew: urlParams.get('isNew') || '',
-    isCertified: urlParams.get('isCertified') || '',
-    inStock: urlParams.get('inStock') || 'true',
-  });
+  const initialFilters: FilterState = useMemo(
+    () => ({
+      make: searchParams.get('make') ?? '',
+      model: searchParams.get('model') ?? '',
+      minYear: searchParams.get('minYear') ?? '',
+      maxYear: searchParams.get('maxYear') ?? '',
+      minPrice: searchParams.get('minPrice') ?? '',
+      maxPrice: searchParams.get('maxPrice') ?? '',
+      minMileage: searchParams.get('minMileage') ?? '',
+      maxMileage: searchParams.get('maxMileage') ?? '',
+      bodyType: searchParams.get('bodyType') ?? '',
+      fuelType: searchParams.get('fuelType') ?? '',
+      transmission: searchParams.get('transmission') ?? '',
+      drivetrain: searchParams.get('drivetrain') ?? '',
+      isNew: searchParams.get('isNew') ?? '',
+      isCertified: searchParams.get('isCertified') ?? '',
+      inStock: searchParams.get('inStock') ?? 'true',
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
-  const { data: vehicles = [], isLoading } = useQuery({
-    queryKey: ['vehicles', filters, sortBy],
-    queryFn: async () => {
-      const query = {};
-
-      if (filters.make) query.make = filters.make;
-      if (filters.model) query.model = filters.model;
-      if (filters.minYear) query.year = { $gte: parseInt(filters.minYear) };
-      if (filters.maxYear)
-        query.year = { ...query.year, $lte: parseInt(filters.maxYear) };
-      if (filters.minPrice)
-        query.price = { $gte: parseFloat(filters.minPrice) };
-      if (filters.maxPrice)
-        query.price = { ...query.price, $lte: parseFloat(filters.maxPrice) };
-      if (filters.minMileage)
-        query.mileage = { $gte: parseFloat(filters.minMileage) };
-      if (filters.maxMileage)
-        query.mileage = {
-          ...query.mileage,
-          $lte: parseFloat(filters.maxMileage),
-        };
-      if (filters.bodyType) query.bodyType = filters.bodyType;
-      if (filters.fuelType) query.fuelType = filters.fuelType;
-      if (filters.transmission) query.transmission = filters.transmission;
-      if (filters.drivetrain) query.drivetrain = filters.drivetrain;
-      if (filters.isNew === 'true') query.isNew = true;
-      if (filters.isCertified === 'true') query.isCertified = true;
-      if (filters.inStock === 'true') query.inStock = true;
-
-      return await base44.entities.Vehicle.filter(query, sortBy);
-    },
-  });
+  const [filters, setFilters] = useState<FilterState>(initialFilters);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Update URL when filters change
   useEffect(() => {
@@ -78,10 +80,75 @@ export default function Inventory() {
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.set(key, value);
     });
-    navigate(`?${params.toString()}`, { replace: true });
-  }, [filters]);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [filters, pathname, router]);
 
-  const handleFilterChange = (key, value) => {
+  // Fetch vehicles when filters or sorting change
+  useEffect(() => {
+    const query: VehicleQuery = {};
+    if (filters.make) query.make = filters.make;
+    if (filters.model) query.model = filters.model;
+    if (filters.minYear)
+      query.year = {
+        ...(query.year ?? {}),
+        $gte: parseInt(filters.minYear, 10),
+      };
+    if (filters.maxYear)
+      query.year = {
+        ...(query.year ?? {}),
+        $lte: parseInt(filters.maxYear, 10),
+      };
+    if (filters.minPrice)
+      query.price = {
+        ...(query.price ?? {}),
+        $gte: parseFloat(filters.minPrice),
+      };
+    if (filters.maxPrice)
+      query.price = {
+        ...(query.price ?? {}),
+        $lte: parseFloat(filters.maxPrice),
+      };
+    if (filters.minMileage)
+      query.mileage = {
+        ...(query.mileage ?? {}),
+        $gte: parseFloat(filters.minMileage),
+      };
+    if (filters.maxMileage)
+      query.mileage = {
+        ...(query.mileage ?? {}),
+        $lte: parseFloat(filters.maxMileage),
+      };
+    if (filters.bodyType) query.bodyType = filters.bodyType;
+    if (filters.fuelType) query.fuelType = filters.fuelType;
+    if (filters.transmission) query.transmission = filters.transmission;
+    if (filters.drivetrain) query.drivetrain = filters.drivetrain;
+    if (filters.isNew === 'true') query.isNew = true;
+    if (filters.isCertified === 'true') query.isCertified = true;
+    if (filters.inStock === 'true') query.inStock = true;
+
+    let active = true;
+    setIsLoading(true);
+    setError(null);
+
+    filterVehicles(query, sortBy)
+      .then((rows) => {
+        if (active) setVehicles(rows);
+      })
+      .catch((e: unknown) => {
+        if (active)
+          setError(e instanceof Error ? e.message : 'Failed to load vehicles');
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [filters, sortBy]);
+
+  const handleFilterChange = (key: keyof FilterState, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -105,318 +172,242 @@ export default function Inventory() {
     });
   };
 
-  const activeFilterCount = Object.values(filters).filter(
-    (v) => v && v !== 'true'
-  ).length;
+  const activeFilterCount = useMemo(
+    () => Object.values(filters).filter((v) => v && v !== 'true').length,
+    [filters]
+  );
 
   return (
-    <div
-      data-source-location='pages/Inventory:98:4'
-      data-dynamic-content='true'
-      className='min-h-screen bg-neutral-50'
-    >
-      {/* Header */}
-      <div
-        data-source-location='pages/Inventory:100:6'
-        data-dynamic-content='true'
-        className='bg-white border-b border-slate-200'
-      >
-        <div
-          data-source-location='pages/Inventory:101:8'
-          data-dynamic-content='true'
-          className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'
-        >
-          <h1
-            data-source-location='pages/Inventory:102:10'
-            data-dynamic-content='false'
-            className='text-3xl md:text-4xl font-bold text-slate-900 mb-2'
-          >
+    <div className='min-h-screen bg-neutral-50'>
+      <div className='bg-white border-b border-slate-200'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+          <h1 className='text-3xl md:text-4xl font-bold text-slate-900 mb-2'>
             Inventory
           </h1>
-          <p
-            data-source-location='pages/Inventory:103:10'
-            data-dynamic-content='true'
-            className='text-slate-600'
-          >
-            Showing {vehicles.length} vehicles
-          </p>
         </div>
       </div>
 
-      <div
-        data-source-location='pages/Inventory:107:6'
-        data-dynamic-content='true'
-        className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'
-      >
-        <div
-          data-source-location='pages/Inventory:108:8'
-          data-dynamic-content='true'
-          className='flex flex-col lg:flex-row gap-8'
-        >
-          {/* Desktop Filter Panel */}
-          <div
-            data-source-location='pages/Inventory:110:10'
-            data-dynamic-content='true'
-            className='hidden lg:block w-80 flex-shrink-0'
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+        <div className='flex items-center gap-3'>
+          <button
+            className='rounded-md border px-3 py-2 text-sm'
+            onClick={() => setShowFilters((s) => !s)}
           >
-            <div
-              data-source-location='pages/Inventory:111:12'
-              data-dynamic-content='true'
-              className='sticky top-24'
+            Filters {activeFilterCount ? `(${activeFilterCount})` : ''}
+          </button>
+          <button
+            className='rounded-md border px-3 py-2 text-sm'
+            onClick={clearFilters}
+          >
+            Clear
+          </button>
+          <select
+            className='rounded-md border px-2 py-2 text-sm'
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value='-created_date'>Newest</option>
+            <option value='price'>Price: Low → High</option>
+            <option value='-price'>Price: High → Low</option>
+            <option value='mileage'>Mileage: Low → High</option>
+            <option value='-mileage'>Mileage: High → Low</option>
+          </select>
+        </div>
+
+        {showFilters && (
+          <div className='mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+            <input
+              className='w-full rounded border px-3 py-2 text-sm'
+              placeholder='Make'
+              value={filters.make}
+              onChange={(e) => handleFilterChange('make', e.target.value)}
+            />
+            <input
+              className='w-full rounded border px-3 py-2 text-sm'
+              placeholder='Model'
+              value={filters.model}
+              onChange={(e) => handleFilterChange('model', e.target.value)}
+            />
+            <input
+              className='w-full rounded border px-3 py-2 text-sm'
+              placeholder='Min Year'
+              value={filters.minYear}
+              onChange={(e) => handleFilterChange('minYear', e.target.value)}
+            />
+            <input
+              className='w-full rounded border px-3 py-2 text-sm'
+              placeholder='Max Year'
+              value={filters.maxYear}
+              onChange={(e) => handleFilterChange('maxYear', e.target.value)}
+            />
+            <input
+              className='w-full rounded border px-3 py-2 text-sm'
+              placeholder='Min Price'
+              value={filters.minPrice}
+              onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+            />
+            <input
+              className='w-full rounded border px-3 py-2 text-sm'
+              placeholder='Max Price'
+              value={filters.maxPrice}
+              onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+            />
+            <input
+              className='w-full rounded border px-3 py-2 text-sm'
+              placeholder='Min Mileage'
+              value={filters.minMileage}
+              onChange={(e) => handleFilterChange('minMileage', e.target.value)}
+            />
+            <input
+              className='w-full rounded border px-3 py-2 text-sm'
+              placeholder='Max Mileage'
+              value={filters.maxMileage}
+              onChange={(e) => handleFilterChange('maxMileage', e.target.value)}
+            />
+            <select
+              className='w-full rounded border px-3 py-2 text-sm'
+              value={filters.bodyType}
+              onChange={(e) => handleFilterChange('bodyType', e.target.value)}
             >
-              <FilterPanel
-                data-source-location='pages/Inventory:112:14'
-                data-dynamic-content='false'
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                onClearFilters={clearFilters}
-                activeFilterCount={activeFilterCount}
+              <option value=''>All Body Types</option>
+              <option value='sedan'>Sedan</option>
+              <option value='suv'>SUV</option>
+              <option value='truck'>Truck</option>
+              <option value='coupe'>Coupe</option>
+              <option value='hatchback'>Hatchback</option>
+              <option value='convertible'>Convertible</option>
+            </select>
+            <select
+              className='w-full rounded border px-3 py-2 text-sm'
+              value={filters.fuelType}
+              onChange={(e) => handleFilterChange('fuelType', e.target.value)}
+            >
+              <option value=''>All Fuel Types</option>
+              <option value='gasoline'>Gasoline</option>
+              <option value='diesel'>Diesel</option>
+              <option value='electric'>Electric</option>
+              <option value='hybrid'>Hybrid</option>
+            </select>
+            <select
+              className='w-full rounded border px-3 py-2 text-sm'
+              value={filters.transmission}
+              onChange={(e) =>
+                handleFilterChange('transmission', e.target.value)
+              }
+            >
+              <option value=''>All Transmissions</option>
+              <option value='automatic'>Automatic</option>
+              <option value='manual'>Manual</option>
+            </select>
+            <select
+              className='w-full rounded border px-3 py-2 text-sm'
+              value={filters.drivetrain}
+              onChange={(e) => handleFilterChange('drivetrain', e.target.value)}
+            >
+              <option value=''>All Drivetrains</option>
+              <option value='fwd'>Front-Wheel Drive</option>
+              <option value='rwd'>Rear-Wheel Drive</option>
+              <option value='awd'>All-Wheel Drive</option>
+              <option value='4wd'>Four-Wheel Drive</option>
+            </select>
+            <div className='flex items-center gap-2'>
+              <input
+                type='checkbox'
+                id='isNew'
+                checked={filters.isNew === 'true'}
+                onChange={(e) =>
+                  handleFilterChange('isNew', e.target.checked ? 'true' : '')
+                }
+                className='h-4 w-4 rounded'
               />
+              <label htmlFor='isNew' className='text-sm'>
+                New
+              </label>
+            </div>
+            <div className='flex items-center gap-2'>
+              <input
+                type='checkbox'
+                id='isCertified'
+                checked={filters.isCertified === 'true'}
+                onChange={(e) =>
+                  handleFilterChange(
+                    'isCertified',
+                    e.target.checked ? 'true' : ''
+                  )
+                }
+                className='h-4 w-4 rounded'
+              />
+              <label htmlFor='isCertified' className='text-sm'>
+                Certified
+              </label>
+            </div>
+            <div className='flex items-center gap-2'>
+              <input
+                type='checkbox'
+                id='inStock'
+                checked={filters.inStock === 'true'}
+                onChange={(e) =>
+                  handleFilterChange('inStock', e.target.checked ? 'true' : '')
+                }
+                className='h-4 w-4 rounded'
+              />
+              <label htmlFor='inStock' className='text-sm'>
+                In Stock
+              </label>
             </div>
           </div>
+        )}
 
-          {/* Main Content */}
-          <div
-            data-source-location='pages/Inventory:122:10'
-            data-dynamic-content='true'
-            className='flex-1'
-          >
-            {/* Mobile Filter Button & Sort */}
-            <div
-              data-source-location='pages/Inventory:124:12'
-              data-dynamic-content='true'
-              className='flex items-center justify-between mb-6'
-            >
-              <Button
-                data-source-location='pages/Inventory:125:14'
-                data-dynamic-content='true'
-                variant='outline'
-                onClick={() => setShowFilters(true)}
-                className='lg:hidden flex items-center gap-2'
+        {isLoading ? (
+          <div className='py-12 text-center text-sm text-slate-500'>
+            Loading…
+          </div>
+        ) : error ? (
+          <div className='py-12 text-center text-sm text-red-600'>{error}</div>
+        ) : vehicles.length === 0 ? (
+          <div className='py-12 text-center text-sm text-slate-500'>
+            No vehicles found.
+          </div>
+        ) : (
+          <ul className='mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+            {vehicles.map((vehicle: Vehicle, index: number) => (
+              <li
+                key={vehicle.id ?? index}
+                className='rounded-lg border bg-white p-4'
               >
-                <SlidersHorizontal
-                  data-source-location='pages/Inventory:130:16'
-                  data-dynamic-content='false'
-                  className='w-4 h-4'
-                />
-                Filters
-                {activeFilterCount > 0 && (
-                  <span
-                    data-source-location='pages/Inventory:133:18'
-                    data-dynamic-content='true'
-                    className='ml-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center'
-                  >
-                    {activeFilterCount}
-                  </span>
-                )}
-              </Button>
-
-              <div
-                data-source-location='pages/Inventory:139:14'
-                data-dynamic-content='true'
-                className='flex items-center gap-2'
-              >
-                <span
-                  data-source-location='pages/Inventory:140:16'
-                  data-dynamic-content='false'
-                  className='text-sm text-slate-600'
-                >
-                  Sort by:
-                </span>
-                <Select
-                  data-source-location='pages/Inventory:141:16'
-                  data-dynamic-content='false'
-                  value={sortBy}
-                  onValueChange={setSortBy}
-                >
-                  <SelectTrigger
-                    data-source-location='pages/Inventory:142:18'
-                    data-dynamic-content='false'
-                    className='w-40'
-                  >
-                    <SelectValue
-                      data-source-location='pages/Inventory:143:20'
-                      data-dynamic-content='false'
+                <div className='shrink-0 mb-3'>
+                  {vehicle.images && vehicle.images.length > 0 ? (
+                    <Image
+                      src={vehicle.images[0]}
+                      alt={`${vehicle.make} ${vehicle.model}`}
+                      width={400}
+                      height={240}
+                      className='h-40 w-full object-cover rounded'
                     />
-                  </SelectTrigger>
-                  <SelectContent
-                    data-source-location='pages/Inventory:145:18'
-                    data-dynamic-content='false'
-                  >
-                    <SelectItem
-                      data-source-location='pages/Inventory:146:20'
-                      data-dynamic-content='false'
-                      value='-created_date'
-                    >
-                      Newest First
-                    </SelectItem>
-                    <SelectItem
-                      data-source-location='pages/Inventory:147:20'
-                      data-dynamic-content='false'
-                      value='price'
-                    >
-                      Price: Low to High
-                    </SelectItem>
-                    <SelectItem
-                      data-source-location='pages/Inventory:148:20'
-                      data-dynamic-content='false'
-                      value='-price'
-                    >
-                      Price: High to Low
-                    </SelectItem>
-                    <SelectItem
-                      data-source-location='pages/Inventory:149:20'
-                      data-dynamic-content='false'
-                      value='-year'
-                    >
-                      Year: New to Old
-                    </SelectItem>
-                    <SelectItem
-                      data-source-location='pages/Inventory:150:20'
-                      data-dynamic-content='false'
-                      value='mileage'
-                    >
-                      Mileage: Low to High
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Vehicle Grid */}
-            {isLoading ? (
-              <div
-                data-source-location='pages/Inventory:158:14'
-                data-dynamic-content='true'
-                className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
-              >
-                {[...Array(9)].map((_, i) => (
-                  <div
-                    data-source-location='pages/Inventory:160:18'
-                    data-dynamic-content='false'
-                    key={i}
-                    className='bg-slate-200 rounded-xl h-96 animate-pulse'
-                  />
-                ))}
-              </div>
-            ) : vehicles.length > 0 ? (
-              <div
-                data-source-location='pages/Inventory:164:14'
-                data-dynamic-content='true'
-                className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
-              >
-                {vehicles.map((vehicle, index) => (
-                  <VehicleCard
-                    data-source-location='pages/Inventory:166:18'
-                    data-dynamic-content='false'
-                    key={vehicle.id}
-                    vehicle={vehicle}
-                    index={index}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div
-                data-source-location='pages/Inventory:170:14'
-                data-dynamic-content='true'
-                className='text-center py-20'
-              >
-                <div
-                  data-source-location='pages/Inventory:171:16'
-                  data-dynamic-content='false'
-                  className='text-6xl mb-4'
-                >
-                  🚗
+                  ) : null}
                 </div>
-                <h3
-                  data-source-location='pages/Inventory:172:16'
-                  data-dynamic-content='false'
-                  className='text-2xl font-semibold text-slate-900 mb-2'
-                >
-                  No vehicles found
+                <h3 className='font-semibold'>
+                  {vehicle.year} {vehicle.make} {vehicle.model}
                 </h3>
-                <p
-                  data-source-location='pages/Inventory:173:16'
-                  data-dynamic-content='false'
-                  className='text-slate-600 mb-6'
-                >
-                  Try adjusting your filters
+                <p className='text-sm text-slate-600'>
+                  ${Intl.NumberFormat().format(vehicle.price)} •{' '}
+                  {vehicle.mileage
+                    ? `${Intl.NumberFormat().format(vehicle.mileage)} mi`
+                    : '—'}
                 </p>
-                <Button
-                  data-source-location='pages/Inventory:174:16'
-                  data-dynamic-content='false'
-                  onClick={clearFilters}
-                  variant='outline'
-                >
-                  Clear All Filters
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
+                <div className='mt-3'>
+                  <Link
+                    className='inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white'
+                    href={`/vehicles/${vehicle.id}`}
+                  >
+                    View details
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-
-      {/* Mobile Filter Drawer */}
-      {showFilters && (
-        <div
-          data-source-location='pages/Inventory:185:8'
-          data-dynamic-content='true'
-          className='fixed inset-0 z-50 lg:hidden'
-        >
-          <div
-            data-source-location='pages/Inventory:186:10'
-            data-dynamic-content='false'
-            className='absolute inset-0 bg-slate-900/50'
-            onClick={() => setShowFilters(false)}
-          />
-          <div
-            data-source-location='pages/Inventory:187:10'
-            data-dynamic-content='true'
-            className='absolute right-0 top-0 bottom-0 w-full max-w-sm bg-white shadow-2xl overflow-y-auto'
-          >
-            <div
-              data-source-location='pages/Inventory:188:12'
-              data-dynamic-content='true'
-              className='sticky top-0 bg-white border-b border-slate-200 p-4 flex items-center justify-between z-10'
-            >
-              <h2
-                data-source-location='pages/Inventory:189:14'
-                data-dynamic-content='false'
-                className='text-lg font-semibold'
-              >
-                Filters
-              </h2>
-              <Button
-                data-source-location='pages/Inventory:190:14'
-                data-dynamic-content='false'
-                variant='ghost'
-                size='icon'
-                onClick={() => setShowFilters(false)}
-              >
-                <X
-                  data-source-location='pages/Inventory:191:16'
-                  data-dynamic-content='false'
-                  className='w-5 h-5'
-                />
-              </Button>
-            </div>
-            <div
-              data-source-location='pages/Inventory:194:12'
-              data-dynamic-content='true'
-              className='p-4'
-            >
-              <FilterPanel
-                data-source-location='pages/Inventory:195:14'
-                data-dynamic-content='false'
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                onClearFilters={clearFilters}
-                activeFilterCount={activeFilterCount}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
