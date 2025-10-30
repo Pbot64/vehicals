@@ -42,7 +42,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href='/autoBody'
+                  href='/auto-body'
                   className='hover:text-white transition-colors'
                 >
                   Auto Body
@@ -65,7 +65,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href='/autoBody'
+                  href='/auto-body'
                   className='hover:text-white transition-colors'
                 >
                   Body Shop

@@ -1,13 +1,7 @@
+'use client';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Search } from 'lucide-react';
 
 const makes = [
@@ -26,17 +20,18 @@ const makes = [
   'Toyota',
   'Volkswagen',
 ];
-const years = [
-  'All Years',
-  ...Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i),
-];
 
 export default function QuickSearch() {
   const router = useRouter();
-  const [make, setMake] = useState<string>('All Makes');
-  const [year, setYear] = useState<string>('All Years');
-  const [minPrice, setMinPrice] = useState<string>('');
-  const [maxPrice, setMaxPrice] = useState<string>('');
+  const [make, setMake] = useState('All Makes');
+  const [year, setYear] = useState('All Years');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+
+  const years = [
+    'All Years',
+    ...Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i),
+  ];
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -60,18 +55,17 @@ export default function QuickSearch() {
           <label className='block text-sm font-medium text-slate-700 mb-2'>
             Make
           </label>
-          <Select value={make} onValueChange={setMake}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {makes.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {m}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select
+            value={make}
+            onChange={(e) => setMake(e.target.value)}
+            className='w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent'
+          >
+            {makes.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Year */}
@@ -79,18 +73,17 @@ export default function QuickSearch() {
           <label className='block text-sm font-medium text-slate-700 mb-2'>
             Year
           </label>
-          <Select value={year} onValueChange={setYear}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {years.map((y) => (
-                <SelectItem key={String(y)} value={String(y)}>
-                  {String(y)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            className='w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent'
+          >
+            {years.map((y) => (
+              <option key={y} value={String(y)}>
+                {y}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Min Price */}
@@ -123,13 +116,13 @@ export default function QuickSearch() {
 
         {/* Search Button */}
         <div className='flex items-end'>
-          <Button
+          <button
             onClick={handleSearch}
-            className='w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30 h-10'
+            className='w-full flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg shadow-blue-600/30 font-medium transition-colors h-10'
           >
             <Search className='w-4 h-4 mr-2' />
             Search
-          </Button>
+          </button>
         </div>
       </div>
     </div>
