@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -11,7 +11,7 @@ import {
 } from '@/utils/vehicles';
 import type { FilterState } from '@/utils/filters';
 
-export default function Inventory() {
+function InventoryContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -381,5 +381,17 @@ export default function Inventory() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function Inventory() {
+  return (
+    <Suspense
+      fallback={
+        <div className='py-12 text-center text-sm text-slate-500'>Loading…</div>
+      }
+    >
+      <InventoryContent />
+    </Suspense>
   );
 }
