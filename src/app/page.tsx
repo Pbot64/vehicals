@@ -79,7 +79,7 @@ export default function Home() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <Link
-              href='/autobody'
+              href='/autoBody'
               className='group rounded-xl border border-slate-200 bg-white p-6 hover:shadow-md transition-shadow'
             >
               <h3 className='text-lg font-semibold text-slate-900 group-hover:text-blue-700'>
