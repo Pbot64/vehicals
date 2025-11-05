@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getVehicle, type Vehicle } from '@/utils/vehicles';
+import { getVehicles, type Vehicle } from '@/lib/vehicles';
 
 export default async function VehicleDetailsPage({
   params,
@@ -7,7 +7,9 @@ export default async function VehicleDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const vehicle: Vehicle | undefined = getVehicle(id);
+  const vehicle: Vehicle | undefined = (await getVehicles()).find(
+    (v) => v.id === id
+  );
 
   if (!vehicle) {
     return <div className='max-w-3xl mx-auto p-6'>Vehicle not found.</div>;

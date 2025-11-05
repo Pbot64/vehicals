@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Fuel, Gauge, Calendar, Award } from 'lucide-react';
-import type { Vehicle } from '@/lib/mockData';
+import type { Vehicle } from '@/lib/vehicles';
 
 interface VehicleCardProps {
   vehicle: Vehicle;

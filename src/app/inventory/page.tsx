@@ -4,12 +4,27 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  filterVehicles,
-  type Vehicle,
-  type VehicleQuery,
-} from '@/utils/vehicles';
+import { filterVehicles, type Vehicle } from '../../lib/vehicles';
 import type { FilterState } from '@/utils/filters';
+
+// Add a local query type matching the shape used in this component
+type RangeQuery = { $gte?: number; $lte?: number };
+
+type VehicleQuery = {
+  make?: string;
+  model?: string;
+  year?: RangeQuery;
+  price?: RangeQuery;
+  mileage?: RangeQuery;
+  bodyType?: string;
+  fuelType?: string;
+  transmission?: string;
+  drivetrain?: string;
+  isNew?: boolean;
+  isCertified?: boolean;
+  inStock?: boolean;
+  [key: string]: any;
+};
 
 function InventoryContent() {
   const router = useRouter();

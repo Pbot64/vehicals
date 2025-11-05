@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import VehicleCard from '@/components/VehicleCard';
 import QuickSearch from '@/components/QuickSearch';
-import { getFeaturedVehicles } from '@/lib/mockData';
+import { getFeaturedVehicles } from '@/lib/vehicles';
 
 export default async function Home() {
   const vehicles = await getFeaturedVehicles(6);

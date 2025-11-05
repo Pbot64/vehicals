@@ -276,7 +276,7 @@ export const filterVehicles = async (filters: {
   maxYear?: number;
   bodyType?: string;
   fuelType?: string;
-}): Promise<Vehicle[]> => {
+}, sortBy: string): Promise<Vehicle[]> => {
   await new Promise((resolve) => setTimeout(resolve, 500));
 
   return mockVehicles.filter((vehicle) => {
